@@ -1,20 +1,20 @@
+    # MODULE_NAME
 """This is the module
-
-OBS !! KODE FRA I MANDAGS, SOM VIRKER !!    
 
 There will be a vararity of functions made for the phase 1 of the project. 
 
 Functions that are a part of the assigment: 
-- load_drivers
-- load_requests
 - generate_drivers
+- load_drivers
 - generate_requests
+- load_requests
+
+This module is created for the purpose of handling input operations related to drivers and requests in a simulation. Both the generation of random drivers and requests as reading a csv file for optaining drivers and requests information. 
 """
 # Programmer at der skal kunne tilgås
 from typing import List
 import random
 import numpy
-import sys
 
 # Generate drivers: 
 def generate_drivers(n: int, width=None, height=None) -> list[dict]:
@@ -34,8 +34,6 @@ def generate_drivers(n: int, width=None, height=None) -> list[dict]:
     A slow driver has a speed between 0.5 and 1.0 grid units pr. time unit.
     A average driver has a speed between 1.0 and 2.0 grid units pr. time unit.
     A fast driver has a speed between 2.0 and 3.0 grid units pr. time unit.
-
-    Mangler docktest for "target_id", "tx" og "ty". !!!!!!!!
 
 
     >>> drivers = generate_drivers(3, 10, 10)
@@ -106,8 +104,17 @@ def load_drivers(path) -> list[dict]:
             if counts[","] > 0:
                 continue
             else:
-                print("Error: Inconsistent separator found in file. You may have used the wrong file.")
+                raise ValueError("Error: Inconsistent separator found in file. You may have used the wrong file.")
+                #print("Error: Inconsistent separator found in file. You may have used the wrong file.")
                 #"""system stop"""
+    
+    # Validate that there is no negative values in the file.
+    with open(path) as csvfil:
+        for line in csvfil:
+            if "-" in line:
+                raise ValueError("Error : there is a negative value in the csv file. None of the given information can have a negative value.")
+                #print("Error : there is a negative value in the csv file. None of the given information can have a negative value.")
+                # system exit
 
     drivers : list[dict]= []
     count_id = 0 # Driver ID counter
@@ -117,7 +124,6 @@ def load_drivers(path) -> list[dict]:
             if count_id == 0: # Skip the header / first row
                 count_id += 1 # Count the number of drivers by counting the rows in the file.
                 continue
-            parts = row.split(",") # Split the row into parts based on commas - slet igen hvis ikke bruges alligevel
             clean = [p.strip() for p in row.split(",")] # Remove any leading/trailing whitespace or newline characters
             
             # Convert the string values into float values if they are digits. 
@@ -129,15 +135,17 @@ def load_drivers(path) -> list[dict]:
             # Validate the number of values in each row after conversion to float. There should eighter be 2 or 3 values. 
             no_info_row = len(parts_float) # Count the number of values in the row after conversion to float.
             if not no_info_row == 2 or no_info_row == 3: # Check how many values are in the row after conversion. There should be 2 or 3 values. 
-                print("Error : Csv file rows have the incorrect number of values. Each row must contain either 2 or 3 values corresponding to x coordinat, y coordinat, and optional speed where speed is optional to include.")
+                raise ValueError("Error : Csv file rows have the incorrect number of values. Each row must contain either 2 or 3 values corresponding to x coordinat, y coordinat, and optional speed where speed is optional to include.")
+                # print("Error : Csv file rows have the incorrect number of values. Each row must contain either 2 or 3 values corresponding to x coordinat, y coordinat, and optional speed where speed is optional to include.")
                 # """sys.exit(1)""" # Exit the program if the row does not have the correct number of values.
             
             # Check if the coordiantes are within the grid bounds.
             x = parts_float[0]
             y = parts_float[1]
             if not (0 <= x <= 50.0) or not (0 <= y <= 30.0):
-                print("Error : Coordinates for drivers are out of grid bounds.")
-                """system stop"""
+                raise ValueError("Error : Coordinates for drivers are out of grid bounds.")
+                # print("Error : Coordinates for drivers are out of grid bounds.")
+                # """system stop"""
             
             # Create the driver dictionary
             if no_info_row == 3:
@@ -157,8 +165,20 @@ def load_drivers(path) -> list[dict]:
     return drivers
 
 def generate_requests(start_t : int, out_list : list, req_rate : float, width = 50, height = 30) -> None:
-    """This function will generate request to the simulation acording to the request rate.
-    The request rate is the average requests pr. minute that have to be generated
+    """This function will generate request to the simulation acording to the request rate. This uses the Poisson distribution to determine the number of requests to generate at each time step.
+    The generated requests will be appended to the provided output list (out_list).
+    Each request is represented as a dictionary with the following keys:
+    - 'id': A unique integer identifier for the request.
+    - 'px': A float representing the pickup x-coordinate within the grid (0 to width
+    - 'py': A float representing the pickup y-coordinate within the grid (0 to height).
+    - 'dx': A float representing the delivery x-coordinate within the grid (0 to width).
+    - 'dy': A float representing the delivery y-coordinate within the grid (0 to height).
+    - 't': An integer representing the request time (start_t).
+    - 'status': A string representing the request status, initially set to "waiting".
+    - 'driver_id': Initially set to None, indicating no driver assigned.
+    The grid size can be adjusted by changing the width and height parameters. If not provided, they default to 50 and 30, respectively.
+
+    The request rate is the average requests pr. minute that have to be generated. It will genereate the requests at a given rate and sendt it to output list that will be read and used by the simulation.
     >>> request_list = []
     >>> generate_requests(0, request_list, 2.0)
     >>> isinstance(request_list, list)
@@ -177,6 +197,8 @@ def generate_requests(start_t : int, out_list : list, req_rate : float, width = 
     # Poisson distribution is commonly used for modeling the number of events occurring in a fixed time period when events happen independently at a constant average rate.
 
     # Making the width and height something that you can change and if not prowided then the defould is width = 50 and height = 30
+    width = 50.0 if width is None else float(width) # There is a defould width if not any other is given. 
+    height = 30.0 if height is None else float(height) # There is a defould hight if not any other is given.
 
     for _ in range(poissdist):
         # _ means that the value in poissdist is not important. Becouse it is random generated with the request rate. 
@@ -216,6 +238,8 @@ def load_requests(path) -> list[dict]:
     None of the information can be a negativevalue and the coordinates value must be within the grids parameters that is width at 50.0 and hight at 30.0. 
 
     The request id will be added as the number of rows taken from the file.'
+    Each dictionary contains the request's pickup and delivery coordinates, request time, status, and driver ID.
+    
     >>> request_list = []
     >>> testingeeee = "/Users/melan/OneDrive/Dokumenter/SDU/Kandidat/1 Semester/DM857 introduktion til programering/Project/projekt_group11_phase1-main/data/requests.csv"
     >>> load_requests(testingeeee)
@@ -228,7 +252,8 @@ def load_requests(path) -> list[dict]:
     with open(path) as csvfil:
         for line in csvfil:
             if "-" in line:
-                print("Error : there is a negative value in the csv file. None of the given information can have a negative value.")
+                raise ValueError("Error : there is a negative value in the csv file. None of the given information can have a negative value.")
+                #print("Error : there is a negative value in the csv file. None of the given information can have a negative value.")
                 # system exit
     
     # Clean the full csv file into a list(list(float))
@@ -256,7 +281,8 @@ def load_requests(path) -> list[dict]:
             if counts[","] > 0:
                 continue
             else:
-                print("Error: Inconsistent separator found in file. You may have used the wrong file.")
+                raise ValueError("Error: Inconsistent separator found in file. You may have used the wrong file.")
+                # print("Error: Inconsistent separator found in file. You may have used the wrong file.")
                 "system stop"
     
     # Check the csv file for that the right amount of information is precent in each row and that the coordiantes match that of the grid.
@@ -264,20 +290,24 @@ def load_requests(path) -> list[dict]:
     for row in full_clean_file:
         no_info_row = len(row)
         if not no_info_row == 5 or no_info_row == 6: # Check how many values are in the row after conversion. There should be 5 or 6 values. Be aware that negative numbers will diapear and therefore trigger this check but any negative numbers should be found in previous checks.
-                print(f"Error : Csv file rows have the incorrect number of values. Each row must contain either 5 or 6 values corresponding to x coordinat, y coordinat, and optional speed where speed is optional to include, the error occured in row no. {count_id_gridchek}.")
+            raise ValueError(f"Error : Csv file rows have the incorrect number of values. Each row must contain either 5 or 6 values corresponding to x coordinat, y coordinat, and optional speed where speed is optional to include, the error occured in row no. {count_id_gridchek}.")
+                # print(f"Error : Csv file rows have the incorrect number of values. Each row must contain either 5 or 6 values corresponding to x coordinat, y coordinat, and optional speed where speed is optional to include, the error occured in row no. {count_id_gridchek}.")
                 # system stop or call the function again
         if not (row[1] <= 50.0) and (row[3] <=50.0): # Chek tht the x coordinates (witch) from the file is not highter than the defould grid width (50.0)
-            print(f"Error : An x coordinates that cooresponds to the placement in the grid width are highter than the max width. The error is to be found in the columns of x picup and/or x delivery. The error occured in row no. {count_id_gridchek}.") 
+            raise ValueError(f"Error : An x coordinates that cooresponds to the placement in the grid width are highter than the max width. The error is to be found in the columns of x picup and/or x delivery. The error occured in row no. {count_id_gridchek}.")
+            #print(f"Error : An x coordinates that cooresponds to the placement in the grid width are highter than the max width. The error is to be found in the columns of x picup and/or x delivery. The error occured in row no. {count_id_gridchek}.") 
             # system stop
         if not (row[2] <=30.0) and (row[4] <= 30.0): # Chek tht the y coordinates (hight) from the file is not highter than the defould grid hight (30.0)
-            print(f"Error : An y coordinate that coorespond to the placement in the grid hight are higher than the max hight. The error is to be found in the columns of y picup and/or y delivery. The error occured in row no. {count_id_gridchek}.")
+            raise ValueError(f"Error : An y coordinate that coorespond to the placement in the grid hight are higher than the max hight. The error is to be found in the columns of y picup and/or y delivery. The error occured in row no. {count_id_gridchek}.")
+            # print(f"Error : An y coordinate that coorespond to the placement in the grid hight are higher than the max hight. The error is to be found in the columns of y picup and/or y delivery. The error occured in row no. {count_id_gridchek}.")
         count_id_gridchek += 1
     
     # Chek that the column of the request time is indeed in an increasing value order. Becouse you can not place orders in the past.
     last_request_time = 0 # The last request time placeholder to compare to ensure that the request_time information is in a increasing order.
     for row in full_clean_file:
         if not (row[0] >= last_request_time):
-            print("The request time (forst column) in the csv file is not in a increasing value order. Please correct the error before trying again")
+            raise ValueError("The request time (forst column) in the csv file is not in a increasing value order. Please correct the error before trying again")
+            # print("The request time (forst column) in the csv file is not in a increasing value order. Please correct the error before trying again")
             # system stop
         else:
             last_request_time = row[0]
@@ -292,7 +322,7 @@ def load_requests(path) -> list[dict]:
             "py" : row[2],
             "dx" : row[3],
             "dy" : row[4],
-            "t": int(row[0]),
+            "t" : int(row[0]),
             "status" : "waiting",
             "driver_id" : None
         }
