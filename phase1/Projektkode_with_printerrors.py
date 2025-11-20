@@ -130,7 +130,7 @@ def load_drivers(path) -> list[dict]:
 
             # Validate the number of values in each row after conversion to float. There should eighter be 2 or 3 values. 
             no_info_row = len(parts_float) # Count the number of values in the row after conversion to float.
-            if not no_info_row == 2 or no_info_row == 3: # Check how many values are in the row after conversion. There should be 2 or 3 values. 
+            if no_info_row not in (2, 3): # Check how many values are in the row after conversion. There should be 2 or 3 values. 
                 print("Error : Csv file rows have the incorrect number of values. Each row must contain either 2 or 3 values corresponding to x coordinat, y coordinat, and optional speed where speed is optional to include.")
             
             # Check if the coordiantes are within the grid bounds.
