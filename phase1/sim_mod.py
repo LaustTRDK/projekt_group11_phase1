@@ -1,9 +1,19 @@
+import csv 
+
+METRICS_FILE = "metrics.csv"
+
+# Initialize the metrics CSV file with headers
+with open(METRICS_FILE, "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["t", "served", "expired", "avg_wait"])
+
+
 def init_state(drivers, requests, timeout, req_rate, width, height):
     """Initialize the simulation."""
     state = {
         "t": 0,
         "drivers": drivers,
-        "pending": requests,   # vores requests bliver sat her
+        "pending": requests, # requests that have appeared but not yet served or expired
         "future": [],
         "served": 0,
         "expired": 0,
@@ -182,7 +192,16 @@ def simulate_step(state):
         "avg_wait": avg_wait,
     }
 
-    # 11) Return updated state and metrics
+    # Log metrics to CSV file
+    with open(METRICS_FILE, "a", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            metrics["t"],
+            metrics["served"],
+            metrics["expired"],
+            metrics["avg_wait"],
+        ])
+
     return state, metrics
 
 
