@@ -188,10 +188,6 @@ def generate_requests(start_t : int, out_list : list, req_rate : float, width = 
     poissdist = numpy.random.poisson(req_rate)
     # Poisson distribution is commonly used for modeling the number of events occurring in a fixed time period when events happen independently at a constant average rate.
 
-    # Making the width and height something that you can change and if not prowided then the defould is width = 50 and height = 30
-    width = 50.0 if width is None else float(width) # There is a defould width if not any other is given. 
-    height = 30.0 if height is None else float(height) # There is a defould hight if not any other is given.
-
     for _ in range(poissdist):
         # _ means that the value in poissdist is not important. Becouse it is random generated with the request rate. 
         # now it also have to make an request ID for the new genereated requests. 
